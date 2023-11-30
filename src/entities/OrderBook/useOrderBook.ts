@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AskOrBidData } from './AskOrBidData';
 import { OBData } from './OBData';
@@ -44,12 +44,13 @@ function getUpdatedArr(
           break;
         }
       } else if (Number(currPrice) < Number(price)) {
-        newArr.push(currArr[i++]);
+        newArr.push(currArr[i]);
+        i++;
       } else {
+        j++;
         if (Number(value) > 0) {
           newArr.push(data);
         }
-        j++;
         break;
       }
     }
@@ -57,7 +58,9 @@ function getUpdatedArr(
     if (i === currArr.length) break;
   }
 
-  return newArr.concat(currArr.slice(i)).concat(normalizedArr.slice(j));
+  return newArr
+    .concat(currArr.slice(i))
+    .concat(normalizedArr.slice(j).filter(([, value]) => Number(value) > 0));
 }
 
 export function useOrderBook(symbol: string): OrderBookData | undefined {
@@ -72,34 +75,44 @@ export function useOrderBook(symbol: string): OrderBookData | undefined {
     });
   }, []);
 
-  const onUpdate = useCallback(
-    (updateData: OBData) => {
-      if (data !== undefined && !updateBuffer.length) {
+  const isUpdatingRef = useRef(false);
+
+  const onUpdate = useCallback(() => {
+    if (
+      !isUpdatingRef.current &&
+      data !== undefined &&
+      updateBuffer.length > 0
+    ) {
+      isUpdatingRef.current = true;
+      let updateData;
+      let newAsks: AskOrBidData[] = data.asks;
+      let newBids: AskOrBidData[] = data.bids;
+
+      while ((updateData = updateBuffer.shift())) {
         const { asks = [], bids = [] } = updateData;
 
-        setData({
-          asks: getUpdatedArr(data.asks, asks),
-          bids: getUpdatedArr(data.bids, bids),
-        });
-      } else {
-        updateBuffer.push(updateData);
+        newAsks = getUpdatedArr(newAsks, asks);
+        newBids = getUpdatedArr(newBids, bids);
       }
-    },
-    [data, updateBuffer]
-  );
+
+      setData({
+        asks: newAsks,
+        bids: newBids,
+      });
+    }
+  }, [data, updateBuffer]);
 
   useEffect(() => {
-    if (data !== undefined && updateBuffer.length > 0) {
-      let updateData;
-      while ((updateData = updateBuffer.shift())) {
-        onUpdate(updateData);
-      }
-    }
-  }, [data, onUpdate, updateBuffer]);
+    isUpdatingRef.current = false;
+    onUpdate();
+  }, [onUpdate]);
 
   useOrderBookWS(symbol, {
     onDataLoaded,
-    onUpdate,
+    onUpdate: (updateData: OBData) => {
+      updateBuffer.push(updateData);
+      onUpdate();
+    },
   });
 
   return data;
