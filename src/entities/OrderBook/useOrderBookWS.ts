@@ -31,7 +31,7 @@ export function useOrderBookWS(
         const sub = ws.newSubscription(`orderbook:${symbol}`);
 
         sub.on('subscribed', ctx => {
-          console.log('sub', ctx.data);
+          // console.log('sub', ctx.data);
 
           lastSeq.current = ctx.data.sequence;
 
@@ -39,7 +39,7 @@ export function useOrderBookWS(
         });
 
         sub.on('publication', ctx => {
-          console.log('pub', ctx.data);
+          // console.log('pub', ctx.data);
 
           if (lastSeq.current !== undefined) {
             if (ctx.data.sequence - lastSeq.current > 1) {
