@@ -12,6 +12,8 @@ export function useCentrifugeWS({
 
   useEffect(() => {
     if (ws === undefined) {
+      console.log('WS connecting...');
+
       const newWS = new Centrifuge(url, { token });
 
       newWS.on('connected', () => {
@@ -24,6 +26,7 @@ export function useCentrifugeWS({
 
       newWS.on('disconnected', () => {
         console.log('WS disconnected');
+        // reconnect
         setWS(undefined);
       });
 

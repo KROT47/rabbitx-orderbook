@@ -1,9 +1,28 @@
-import { useOrderBookWS } from '@/entities/OrderBook';
+import { useOrderBook } from '@/entities/OrderBook';
 
 import styles from './OrderBook.module.css';
 
-export function OrderBook() {
-  useOrderBookWS();
+const orderBookVisibleItems = 11;
 
-  return <div className={styles.root}>123</div>;
+export function OrderBook() {
+  const { asks = [], bids = [] } = useOrderBook('BTC-USD') ?? {};
+
+  const preparedAsks = asks.slice(0, orderBookVisibleItems).reverse();
+  const preparedBids = bids.slice(-orderBookVisibleItems).reverse();
+
+  return (
+    <div className={styles.root}>
+      {preparedAsks.map(([price, value]) => (
+        <div key={price}>
+          {price} - {value}
+        </div>
+      ))}
+      -------
+      {preparedBids.map(([price, value]) => (
+        <div key={price}>
+          {price} - {value}
+        </div>
+      ))}
+    </div>
+  );
 }
