@@ -1,0 +1,87 @@
+@use 'sass:math';
+
+.root {
+  width: 300px;
+  background: #101624;
+  color: #a1acc2;
+  font-size: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.row {
+  display: flex;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  > div {
+    width: math.div(100%, 3);
+    padding: 0 6px;
+
+    &:not(:first-of-type) {
+      text-align: right;
+    }
+  }
+}
+
+.asks {
+  .row {
+    &:last-of-type {
+      > div {
+        &:first-of-type {
+          border-radius: 4px;
+          background: #472233;
+        }
+      }
+    }
+
+    > div {
+      &:first-of-type {
+        color: #ff475d;
+      }
+    }
+  }
+}
+
+.bids {
+  .row {
+    &:first-of-type {
+      > div {
+        &:first-of-type {
+          border-radius: 4px;
+          background: #123a42;
+        }
+      }
+    }
+
+    > div {
+      &:first-of-type {
+        color: #19eaab;
+      }
+    }
+  }
+}
+
+.header {
+  composes: row;
+
+  span {
+    background: #202a3f;
+    padding: 2px;
+    border-radius: 4px;
+  }
+}
+
+.totalAmount {
+  position: relative;
+  --color: #321e2c;
+
+  .bids & {
+    --color: #12292e;
+  }
+}
